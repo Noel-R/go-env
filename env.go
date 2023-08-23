@@ -23,12 +23,12 @@ type IEnvironmentContext interface {
 func (ctx *EnvironmentContext) Setup() *EnvironmentContext {
 	var Env *Environment
 	files, _ := filepath.Glob(".env.*")
-	Env = Env.Create(files[0])
-	err := Env.Read()
+	Env = Env.create(files[0])
+	err := Env.read()
 	if err != nil {
 		return nil
 	}
-	err = Env.Set()
+	err = Env.set()
 	if err != nil {
 		return nil
 	}
@@ -41,7 +41,7 @@ func (ctx *EnvironmentContext) Get(key string) string {
 }
 
 func (ctx *EnvironmentContext) Breakdown() {
-	_ = ctx.Env.UnSet()
+	_ = ctx.Env.unSet()
 }
 
 func (ctx *EnvironmentContext) GetVariables() *[]*EnvironmentVariable {
@@ -60,16 +60,11 @@ type Environment struct {
 	path      string
 }
 
-type IEnvironment interface {
-	Set() error
-	UnSet() error
-}
-
-func (env *Environment) Create(path string) *Environment {
+func (env *Environment) create(path string) *Environment {
 	return &Environment{branch: strings.SplitAfter(path, "env.")[1], path: path, variables: make([]*EnvironmentVariable, 0)}
 }
 
-func (env *Environment) Set() error {
+func (env *Environment) set() error {
 	err := os.Setenv("local-environment", env.branch)
 	for _, variable := range env.variables {
 		err = os.Setenv(variable.key, variable.value)
@@ -80,7 +75,7 @@ func (env *Environment) Set() error {
 	return err
 }
 
-func (env *Environment) UnSet() error {
+func (env *Environment) unSet() error {
 	var err error
 	for _, variable := range env.variables {
 		err = os.Unsetenv(variable.key)
@@ -92,11 +87,11 @@ func (env *Environment) UnSet() error {
 	return err
 }
 
-func (env *Environment) Add(variable *EnvironmentVariable) {
+func (env *Environment) add(variable *EnvironmentVariable) {
 	env.variables = append(env.variables, variable)
 }
 
-func (env *Environment) Read() error {
+func (env *Environment) read() error {
 	var err error
 
 	content, err := os.ReadFile(env.path)
@@ -110,7 +105,7 @@ func (env *Environment) Read() error {
 
 	for key, value := range unmarshalled {
 		var newEnv *EnvironmentVariable
-		env.Add(newEnv.Create(key, value))
+		env.add(newEnv.create(key, value))
 	}
 
 	return err
@@ -123,16 +118,11 @@ type EnvironmentVariable struct {
 	value string
 }
 
-type IEnvironmentVariable interface {
-	Create(string, string) *EnvironmentVariable
-	Value() string
-}
-
-func (ev *EnvironmentVariable) Create(key string, val string) *EnvironmentVariable {
+func (ev *EnvironmentVariable) create(key string, val string) *EnvironmentVariable {
 	return &EnvironmentVariable{key: key, value: val}
 }
 
-func (ev *EnvironmentVariable) Value() (string, error) {
+func (ev *EnvironmentVariable) getValue() (string, error) {
 	if len(ev.value) == 0 {
 		return "", errors.New("no Value set in variable")
 	} else {
