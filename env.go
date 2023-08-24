@@ -129,3 +129,7 @@ func (ev *EnvironmentVariable) getValue() (string, error) {
 		return ev.value, nil
 	}
 }
+
+func (ev *EnvironmentVariable) GetKey() string {
+	return ev.key
+}
