@@ -1,4 +1,4 @@
-package env
+package my_env
 
 import (
 	"encoding/json"
